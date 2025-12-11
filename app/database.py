@@ -1,3 +1,5 @@
+# app/database.py
+
 import os
 import time
 from dotenv import load_dotenv
@@ -23,30 +25,29 @@ DELAY = float(os.getenv("DB_RETRY_DELAY", "1.5"))
 # SQLite requires special connect args
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-# Retry logic for establishing DB connection (useful for Postgres)
+# Retry logic for establishing DB connection
 for _ in range(RETRIES):
     try:
         engine = create_engine(
             DATABASE_URL,
             pool_pre_ping=True,
             echo=SQL_ECHO,
-            connect_args=connect_args
+            connect_args=connect_args,
         )
-        with engine.connect():  # Smoke test
+        with engine.connect():
             pass
         break
     except OperationalError:
         time.sleep(DELAY)
 
-# Session configuration
 SessionLocal = sessionmaker(
     bind=engine,
     autocommit=False,
     autoflush=False,
-    expire_on_commit=False
+    expire_on_commit=False,
 )
 
-# Dependency for DB session
+
 def get_db():
     db = SessionLocal()
     try:

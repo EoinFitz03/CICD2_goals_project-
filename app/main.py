@@ -13,11 +13,11 @@ from .models import Base, UserDB
 from .schemas import UserInput, UserOutput, UserUpdate
 
 
-# Lifespan / app setup 
+# ---------- Lifespan / app setup ----------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables on startup
+    # Create the users table on startup
     Base.metadata.create_all(bind=engine)
     yield
 
@@ -32,6 +32,7 @@ app.add_middleware(
 )
 
 
+# ---------- Helper for committing ----------
 
 def commit_or_rollback(db: Session, error_msg: str):
     try:
@@ -44,7 +45,7 @@ def commit_or_rollback(db: Session, error_msg: str):
         )
 
 
-
+# ---------- Health & root ----------
 
 @app.get("/health")
 def health():
@@ -56,10 +57,14 @@ def root():
     return {"message": "Welcome to the Fitness Tracker Users Service"}
 
 
-# Users
+# ---------- Users CRUD ----------
 
 # CREATE user
-@app.post( "/api/users",response_model=UserOutput,status_code=status.HTTP_201_CREATED,)
+@app.post(
+    "/api/users",
+    response_model=UserOutput,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_user(payload: UserInput, db: Session = Depends(get_db)):
     user = UserDB(**payload.model_dump())
     db.add(user)
@@ -83,11 +88,10 @@ def list_users(
         .offset(offset)
     )
     result = db.execute(stmt)
-    users = result.scalars().all()
-    return users
+    return result.scalars().all()
 
 
-# GET single user
+# GET single user by user_id
 @app.get("/api/users/{user_id}", response_model=UserOutput)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.get(UserDB, user_id)
@@ -99,7 +103,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 
-# FULL REPLACE user 
+# FULL REPLACE user (PUT)
 @app.put("/api/users/{user_id}", response_model=UserOutput)
 def replace_user(
     user_id: int,
@@ -123,7 +127,7 @@ def replace_user(
     return user
 
 
-# PARTIAL UPDATE user 
+# PARTIAL UPDATE user (PATCH)
 @app.patch("/api/users/{user_id}", response_model=UserOutput)
 def update_user(
     user_id: int,

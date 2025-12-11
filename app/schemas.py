@@ -47,7 +47,7 @@ class UserOutput(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[NameStr] = None
     email: Optional[EmailStr] = None
-    age: Optional[AgeInt] = None
+    age: Optional[AgeInt] = None 
     gender: Optional[GenderEnum] = None
 
 
