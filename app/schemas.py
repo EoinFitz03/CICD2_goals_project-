@@ -1,56 +1,61 @@
 # app/schemas.py
 
 from typing import Annotated, Optional
-from enum import Enum
+from datetime import date
 
 from annotated_types import Ge, Le
-from pydantic import BaseModel, EmailStr, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, StringConstraints
 
 # ---------- Reusable type aliases ----------
 
-NameStr   = Annotated[str, StringConstraints(min_length=2, max_length=50)]
-AgeInt    = Annotated[int, Ge(18), Le(150)]
+GoalTitleStr = Annotated[str, StringConstraints(min_length=3, max_length=100)]
+GoalDescriptionStr = Annotated[str, StringConstraints(max_length=500)]
+GoalStatusStr = Annotated[str, StringConstraints(min_length=3, max_length=50)]
+GoalUnitStr = Annotated[str, StringConstraints(min_length=1, max_length=50)]
+
+GoalValueFloat = Annotated[float, Ge(0.0), Le(1_000_000.0)]
+
 UserIdInt = int
+GoalIdInt = int
 
 
-# ---------- Enums ----------
+# ---------- Schemas ----------
 
-class GenderEnum(str, Enum):
-    Male   = "Male"
-    Female = "Female"
-    Other  = "Other"
-
-
-# ---------- Users ----------
-
-# Used for creating a new user (request body)
-class UserInput(BaseModel):
-    name: NameStr
-    email: EmailStr
-    age: AgeInt
-    gender: GenderEnum
+class GoalInput(BaseModel):
+    user_id: UserIdInt
+    title: GoalTitleStr
+    description: Optional[GoalDescriptionStr] = None
+    target_value: Optional[GoalValueFloat] = None
+    current_value: Optional[GoalValueFloat] = None
+    unit: Optional[GoalUnitStr] = None
+    due_date: Optional[date] = None
+    status: GoalStatusStr = "pending"
 
 
-# Used when returning a user from the database (response model)
-class UserOutput(BaseModel):
+class GoalOutput(BaseModel):
+    # like orm_mode=True in Pydantic v1
     model_config = ConfigDict(from_attributes=True)
 
+    goal_id: GoalIdInt
     user_id: UserIdInt
-    name: NameStr
-    email: EmailStr
-    age: AgeInt
-    gender: GenderEnum
+    title: GoalTitleStr
+    description: Optional[GoalDescriptionStr] = None
+    target_value: Optional[GoalValueFloat] = None
+    current_value: Optional[GoalValueFloat] = None
+    unit: Optional[GoalUnitStr] = None
+    due_date: Optional[date] = None
+    status: GoalStatusStr
 
 
-# Used for updating an existing user (PATCH/PUT body)
-# Fields are optional so you can send partial updates if you want
-class UserUpdate(BaseModel):
-    name: Optional[NameStr] = None
-    email: Optional[EmailStr] = None
-    age: Optional[AgeInt] = None 
-    gender: Optional[GenderEnum] = None
+class GoalUpdate(BaseModel):
+    title: Optional[GoalTitleStr] = None
+    description: Optional[GoalDescriptionStr] = None
+    target_value: Optional[GoalValueFloat] = None
+    current_value: Optional[GoalValueFloat] = None
+    unit: Optional[GoalUnitStr] = None
+    due_date: Optional[date] = None
+    status: Optional[GoalStatusStr] = None
 
 
-# Used when you want to delete a user (request body or path param + body)
-class UserRemove(BaseModel):
-    user_id: UserIdInt
+class GoalRemove(BaseModel):
+    goal_id: GoalIdInt

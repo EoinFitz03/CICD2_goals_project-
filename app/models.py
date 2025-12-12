@@ -1,23 +1,38 @@
 # app/models.py
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Integer, Enum as SAEnum
+from datetime import date
 
-from .schemas import GenderEnum
+from sqlalchemy import String, Integer, Date, Text, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
+    """Base class for all ORM models."""
     pass
 
 
-class UserDB(Base):
-    __tablename__ = "users"
+class GoalDB(Base):
+    __tablename__ = "goals"
 
-    user_id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    age: Mapped[int] = mapped_column(Integer, nullable=False)
-    gender: Mapped[GenderEnum] = mapped_column(
-        SAEnum(GenderEnum, name="gender_enum"),
-        nullable=False,
-    )
+    goal_id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+
+    # basic info
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # numeric target and progress (e.g. kg, km, sessions)
+    target_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(50), nullable=True)  # "kg", "km", etc.
+
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    # e.g. "pending", "in_progress", "completed"
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+
+    def __repr__(self) -> str:
+        return (
+            f"<GoalDB(goal_id={self.goal_id}, user_id={self.user_id}, "
+            f"title={self.title!r}, status={self.status!r})>"
+        )
