@@ -13,21 +13,20 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set image name
-        # Final image: ghcr.io/<owner>/goals-service:latest
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/goals-service" >> $GITHUB_ENV
+        # ghcr.io/<owner>/<repo>/goals
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/goals" >> $GITHUB_ENV
 
-      - name: Login to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and Push
         uses: docker/build-push-action@v6
         with:
           context: .
